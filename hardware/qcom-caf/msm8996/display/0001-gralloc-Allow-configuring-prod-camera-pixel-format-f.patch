@@ -1,0 +1,43 @@
+From da64894adaf4434d3dd8c22f3cb7b3da26d2fe1c Mon Sep 17 00:00:00 2001
+From: zqm64 <zqm64@outlook.com>
+Date: Sat, 26 Jun 2021 15:13:42 +0800
+Subject: [PATCH] gralloc: Allow configuring prod camera pixel format from
+ device tree
+
+---
+ gralloc/Android.mk       | 5 +++++
+ gralloc/gr_allocator.cpp | 2 +-
+ 2 files changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/gralloc/Android.mk b/gralloc/Android.mk
+index 3a8282b88..d0487d1ba 100644
+--- a/gralloc/Android.mk
++++ b/gralloc/Android.mk
+@@ -23,6 +23,11 @@ LOCAL_HEADER_LIBRARIES        := display_headers
+ ifneq ($(TARGET_KERNEL_VERSION), 4.14)
+ LOCAL_CFLAGS                  += -isystem  $(kernel_includes)
+ endif
++ifneq ($(TARGET_GRALLOC_PROD_CAMERA_PIXEL_FORMAT),)
++LOCAL_CFLAGS                  += -DPROD_CAMERA_PIXEL_FORMAT=$(TARGET_GRALLOC_PROD_CAMERA_PIXEL_FORMAT)
++else
++LOCAL_CFLAGS                  += -DPROD_CAMERA_PIXEL_FORMAT=HAL_PIXEL_FORMAT_YCbCr_420_SP_VENUS
++endif
+ LOCAL_CLANG                   := true
+ LOCAL_ADDITIONAL_DEPENDENCIES := $(common_deps) $(kernel_deps)
+ LOCAL_SRC_FILES               := gr_ion_alloc.cpp \
+diff --git a/gralloc/gr_allocator.cpp b/gralloc/gr_allocator.cpp
+index 6aff3acd1..cc4fef6fb 100644
+--- a/gralloc/gr_allocator.cpp
++++ b/gralloc/gr_allocator.cpp
+@@ -219,7 +219,7 @@ int Allocator::GetImplDefinedFormat(gralloc1_producer_usage_t prod_usage,
+       if (format == HAL_PIXEL_FORMAT_YCbCr_420_888) {
+         gr_format = HAL_PIXEL_FORMAT_NV21_ZSL;  // NV21
+       } else {
+-        gr_format = HAL_PIXEL_FORMAT_YCbCr_420_SP_VENUS;  // NV12 preview
++        gr_format = PROD_CAMERA_PIXEL_FORMAT;  // NV12 preview
+       }
+     } else if (cons_usage & GRALLOC1_CONSUMER_USAGE_HWCOMPOSER) {
+       // XXX: If we still haven't set a format, default to RGBA8888
+-- 
+2.20.1
+
